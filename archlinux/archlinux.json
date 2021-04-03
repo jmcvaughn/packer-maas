@@ -1,0 +1,45 @@
+{
+    "variables":
+        {
+            "archlinux_iso_url": "http://mirrors.edge.kernel.org/archlinux/iso/2021.03.01/archlinux-2021.03.01-x86_64.iso",
+            "archlinux_sha256sum_url": "https://mirrors.edge.kernel.org/archlinux/iso/2021.03.01/sha1sums.txt"
+        },
+    "builders": [
+        {
+            "type": "qemu",
+            "iso_url": "{{ user `archlinux_iso_url` }}",
+            "iso_checksum": "file:{{ user `archlinux_sha256sum_url` }}",
+            "boot_command": [
+                "<enter><wait40s>",
+                "passwd<enter>packer-maas<enter>packer-maas<enter>"
+            ],
+            "ssh_username": "root",
+            "ssh_password": "packer-maas",
+            "boot_wait": "10s",
+            "disk_size": "4G",
+            "headless": true,
+            "memory": 2048,
+            "firmware": "/usr/share/OVMF/OVMF_CODE.fd",
+            "qemuargs": [
+                [ "-serial", "stdio" ]
+            ]
+        }
+    ],
+    "provisioners": [
+        {
+            "type": "shell",
+            "script": "install.sh"
+        }
+    ],
+    "post-processors": [
+        {
+            "type": "shell-local",
+            "inline_shebang": "/bin/bash -e",
+            "inline": [
+                "source ../scripts/setup-nbd",
+                "OUTPUT=${OUTPUT:-archlinux.tar.gz}",
+                "source ../scripts/tar-root"
+            ]
+        }
+    ]
+}
